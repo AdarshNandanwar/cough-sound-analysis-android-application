@@ -21,30 +21,9 @@ import java.net.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.UUID;
-
-import okhttp3.OkHttpClient;
-
-import android.os.AsyncTask;
-//import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.MultipartBody;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -56,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     Handler handler;
     final int AUDIO_DURATION = 5000;
     final int REQUEST_PERMISSION_CODE = 1000;;
-    final String API_url = "http://127.0.0.1:5000/classify/";
+    final String API_url = "https://cough-analysis.herokuapp.com/classify";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -165,121 +144,72 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view){
 
-                 Toast.makeText(MainActivity.this, "API call", Toast.LENGTH_SHORT).show();
-                // POST request to API
-
                 File file = new File(pathSave);
-//                uploadFile(API_url, file);
+
+
+                Log.d("info", API_url);
+                Log.d("info", pathSave);
+
+                // #######################################
+
+
+
+                // POST request to API
+                try {
+                    String boundary = Long.toHexString(System.currentTimeMillis());
+                    URLConnection connection = new URL(API_url).openConnection();
+                    connection.setDoOutput(true);
+                    connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+                    PrintWriter writer = null;
+
+
+//                    connection.setRequestMethod("POST");
+                    connection.setDoInput(true);
+                    connection.setDoOutput(true);
+
+                    try {
+                        writer = new PrintWriter(new OutputStreamWriter(connection.getOutputStream(), "UTF-8"));
+
+                        writer.println("--" + boundary);
+                        writer.println("Content-Disposition: form-data; name=\"" + file.getName() + "\"; filename=\"" + file.getName() + "\"");
+                        writer.println("Content-Type: text/plain; charset=UTF-8");
+                        writer.println();
+                        BufferedReader reader = null;
+                        try {
+                            reader = new BufferedReader(new InputStreamReader(new FileInputStream(pathSave), "UTF-8"));
+                            for (String line; (line = reader.readLine()) != null;) {
+                                writer.println(line);
+                            }
+                        } finally {
+                            if (reader != null) {
+                                reader.close();
+                            }
+                        }
+
+                        writer.println("--" + boundary + "--");
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    } finally {
+                        if (writer != null) writer.close();
+                    }
+                    // Connection is lazily executed whenever you request any status.
+                    int responseCode = ((HttpURLConnection) connection).getResponseCode();
+                    // Handle response
+
+                    Toast.makeText(MainActivity.this, "Code: "+responseCode, Toast.LENGTH_SHORT).show();
+
+
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+
+
+                // #######################################
+
 
             }
         });
     }
-
-//    public static Boolean uploadFile(String serverURL, File file) {
-//        try {
-//
-//            RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
-//                    .addFormDataPart("file", file.getName(),
-//                            RequestBody.create(MediaType.parse("text/csv"), file))
-//                    .addFormDataPart("some-field", "some-value")
-//                    .build();
-//
-//            Request request = new Request.Builder()
-//                    .url(serverURL)
-//                    .post(requestBody)
-//                    .build();
-//
-//            client.newCall(request).enqueue(new Callback() {
-//
-//                @Override
-//                public void onFailure(final Call call, final IOException e) {
-//                    // Handle the error
-//                }
-//
-//                @Override
-//                public void onResponse(final Call call, final Response response) throws IOException {
-//                    if (!response.isSuccessful()) {
-//                        // Handle the error
-//                    }
-//                    // Upload successful
-//                }
-//            });
-//
-//            return true;
-//        } catch (Exception ex) {
-//            // Handle the error
-//        }
-//        return false;
-//    }
-
-
-//    public void sendPOSTRequest(String url, String authData, String attachmentFilePath, String outputFilePathName)
-//    {
-//        String charset = "UTF-8";
-//        File binaryFile = new File(attachmentFilePath);
-//        String boundary = "------------------------" + Long.toHexString(System.currentTimeMillis()); // Just generate some unique random value.
-//        String CRLF = "\r\n"; // Line separator required by multipart/form-data.
-//        int    responseCode = 0;
-//
-//        try
-//        {
-//            //Set POST general headers along with the boundary string (the seperator string of each part)
-//            URLConnection connection = new URL(url).openConnection();
-//            connection.setDoOutput(true);
-//            connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-//            connection.addRequestProperty("User-Agent", "CheckpaySrv/1.0.0");
-//            connection.addRequestProperty("Accept", "*/*");
-//            connection.addRequestProperty("Authentication", authData);
-//
-//
-//            Toast.makeText(this, "1", Toast.LENGTH_SHORT).show();
-//
-//            OutputStream output = connection.getOutputStream();
-//            PrintWriter writer  = new PrintWriter(new OutputStreamWriter(output, charset), true);
-//
-//
-//            Toast.makeText(this, "2", Toast.LENGTH_SHORT).show();
-//
-//            // Send binary file - part
-//            // Part header
-//            writer.append("--" + boundary).append(CRLF);
-//            writer.append("Content-Disposition: form-data; name=\"file\"; filename=\"" + binaryFile.getName() + "\"").append(CRLF);
-//            writer.append("Content-Type: application/octet-stream").append(CRLF);// + URLConnection.guessContentTypeFromName(binaryFile.getName())).append(CRLF);
-//            writer.append(CRLF).flush();
-//
-//            // File data
-//            Files.copy(binaryFile.toPath(), output);
-//            output.flush();
-//
-//            // End of multipart/form-data.
-//            writer.append(CRLF).append("--" + boundary + "--").flush();
-//
-//            responseCode = ((HttpURLConnection) connection).getResponseCode();
-//
-//            Toast.makeText(this, "val: "+responseCode, Toast.LENGTH_SHORT).show();
-//
-//            if(responseCode !=200) //We operate only on HTTP code 200
-//                return;
-//
-//            InputStream Instream = ((HttpURLConnection) connection).getInputStream();
-//
-//            // Write PDF file
-//            BufferedInputStream BISin = new BufferedInputStream(Instream);
-//
-//            int i;
-//            while ((i = BISin.read()) != -1) {
-//                Toast.makeText(this, "Value: "+i, Toast.LENGTH_SHORT).show();
-//            }
-//
-//
-//        }
-//        catch(Exception e)
-//        {
-//            e.printStackTrace();
-//        }
-//
-//    }
-
 
     private void stopRecordingAudio(){
         mediaRecorder.stop();
@@ -323,6 +253,7 @@ public class MainActivity extends AppCompatActivity {
     private void requestPermission() {
         ActivityCompat.requestPermissions(this, new String[] {
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.RECORD_AUDIO
         }, REQUEST_PERMISSION_CODE);
     }
@@ -343,7 +274,8 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean checkPermissionFromDevice(){
         int writeExternalStorageResult = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int readExternalStorageResult = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
         int recordAudioResult = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
-        return writeExternalStorageResult == PackageManager.PERMISSION_GRANTED && recordAudioResult == PackageManager.PERMISSION_GRANTED;
+        return writeExternalStorageResult == PackageManager.PERMISSION_GRANTED && readExternalStorageResult == PackageManager.PERMISSION_GRANTED && recordAudioResult == PackageManager.PERMISSION_GRANTED;
     }
 }
