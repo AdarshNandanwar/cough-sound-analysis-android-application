@@ -19,11 +19,8 @@ import android.widget.Toast;
 
 import java.net.*;
 import java.io.*;
-import java.nio.file.Files;
 import java.util.UUID;
 import java.io.IOException;
-
-import okhttp3.Request;
 
 public class MainActivity extends AppCompatActivity {
 

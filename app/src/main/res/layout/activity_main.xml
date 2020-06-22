@@ -4,63 +4,88 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center"
+    android:layout_weight="1"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:background="#E9F4FF">
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:text="RECORD AREA" />
+        android:id="@+id/textView"
+        android:layout_width="250dp"
+        android:layout_height="50dp"
+        android:gravity="center"
+        android:text="RECORD AREA"
+        android:textAlignment="center"
+        android:textSize="20sp"/>
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:background="@drawable/custom_button"
         android:id="@+id/btnStartRecord"
-        android:text="RECORD" />
+        android:layout_width="158dp"
+        android:layout_height="47dp"
+        android:text="RECORD"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
 
-<!--    <Button-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:id="@+id/btnStopRecord"-->
-<!--        android:text="STOP RECORD" />-->
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:text="PLAY AREA" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/btnStartPlay"
-        android:text="PLAY" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/btnStopPlay"
-        android:text="STOP" />
+    <!--    <Button-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:id="@+id/btnStopRecord"-->
+    <!--        android:text="STOP RECORD" />-->
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:text="TEST AREA" />
+        android:layout_width="250dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="50dp"
+        android:gravity="center"
+        android:text="PLAY AREA"
+        android:textAlignment="center"
+        android:textSize="20sp"/>
 
-    <Button
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/btnAnalyze"
-        android:text="ANALYZE COUGH" />
+        android:gravity="center" >
+
+        <Button
+            android:background="@drawable/custom_button"
+            android:id="@+id/btnStartPlay"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:text="PLAY"
+            android:gravity="center"
+            android:layout_marginRight="100dp" />
+
+        <Button
+            android:background="@drawable/custom_button"
+            android:id="@+id/btnStopPlay"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:text="STOP"
+            android:gravity="center"
+            android:layout_marginLeft="100dp" />
+    </RelativeLayout>
+
 
     <TextView
         android:id="@+id/resultText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="25sp"
-        android:text="Results will appear here" />
+        android:layout_width="350dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="50dp"
+        android:gravity="center"
+        android:text="Results will appear here"
+        android:textSize="25sp"/>
 
-    
+    <Button
+        android:background="@drawable/custom_button"
+        android:id="@+id/btnAnalyze"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:text="ANALYZE COUGH" />
+
+
+
 </LinearLayout>
