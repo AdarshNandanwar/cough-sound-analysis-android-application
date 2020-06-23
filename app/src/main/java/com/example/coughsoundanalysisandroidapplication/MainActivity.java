@@ -9,18 +9,36 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.FileUtils;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.net.*;
 import java.io.*;
 import java.util.UUID;
 import java.io.IOException;
+
+import java.util.List;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     Handler handler;
     final int AUDIO_DURATION = 5000;
     final int REQUEST_PERMISSION_CODE = 1000;;
-    final String API_url = "https://cough-analysis.herokuapp.com/classify";
+    private TextView resultText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
         // Request runtime permission
         if(!checkPermissionFromDevice())
             requestPermission();
+
+        resultText = (TextView)findViewById(R.id.resultText);
 
         // Init view
         btnStartRecord = (Button) findViewById(R.id.btnStartRecord);
@@ -142,67 +162,60 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view){
 
                 File file = new File(pathSave);
-
-
-                Log.d("info", API_url);
-                Log.d("info", pathSave);
+                resultText.setText("Processing...");
 
                 // #######################################
 
+                // create upload service client
+                FileUploadService service =
+                        ServiceGenerator.createService(FileUploadService.class);
 
+                // create RequestBody instance from file
+                RequestBody requestFile =
+                        RequestBody.create(
+                                MediaType.parse("media/type"),
+                                file
+                        );
 
-                // POST request to API
-                try {
-                    String boundary = Long.toHexString(System.currentTimeMillis());
-                    URLConnection connection = new URL(API_url).openConnection();
-                    connection.setDoOutput(true);
-                    connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-                    PrintWriter writer = null;
+                // MultipartBody.Part is used to send also the actual file name
+                MultipartBody.Part body =
+                        MultipartBody.Part.createFormData("file", file.getName(), requestFile);
 
-
-//                    connection.setRequestMethod("POST");
-                    connection.setDoInput(true);
-                    connection.setDoOutput(true);
-
-                    try {
-                        writer = new PrintWriter(new OutputStreamWriter(connection.getOutputStream(), "UTF-8"));
-
-                        writer.println("--" + boundary);
-                        writer.println("Content-Disposition: form-data; name=\"" + file.getName() + "\"; filename=\"" + file.getName() + "\"");
-                        writer.println("Content-Type: text/plain; charset=UTF-8");
-                        writer.println();
-                        BufferedReader reader = null;
-                        try {
-                            reader = new BufferedReader(new InputStreamReader(new FileInputStream(pathSave), "UTF-8"));
-                            for (String line; (line = reader.readLine()) != null;) {
-                                writer.println(line);
-                            }
-                        } finally {
-                            if (reader != null) {
-                                reader.close();
+                // finally, execute the request
+                Call<ResponseBody> call = service.upload(body);
+                call.enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call,
+                                           Response<ResponseBody> response) {
+                        Log.v("Upload", "success");
+                        Log.v("Response", response.toString());
+                        if(response.isSuccessful()) {
+                            try {
+                                JSONObject json = new JSONObject(response.body().string());
+                                String prediction = json.getJSONObject("data").getString("prediction");
+                                String message = json.getString("message");
+                                if(prediction == "null")
+                                    resultText.setText("Cough not detected");
+                                else
+                                    resultText.setText(prediction);
+                                Log.v("StatusCode", json.getString("status"));
+                                Log.e("Error", message);
+                                Log.v("Prediction", prediction);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
                         }
-
-                        writer.println("--" + boundary + "--");
-                    } catch (Exception e){
-                        e.printStackTrace();
-                    } finally {
-                        if (writer != null) writer.close();
                     }
-                    // Connection is lazily executed whenever you request any status.
-                    int responseCode = ((HttpURLConnection) connection).getResponseCode();
-                    // Handle response
 
-                    Toast.makeText(MainActivity.this, "Code: "+responseCode, Toast.LENGTH_SHORT).show();
-
-
-                } catch (Exception e){
-                    e.printStackTrace();
-                }
-
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        Log.e("Upload error:", t.getMessage());
+                    }
+                });
 
                 // #######################################
-
 
             }
         });
